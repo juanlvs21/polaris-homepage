@@ -1,0 +1,21 @@
+# Binarios
+/polaris-dashboard
+*.exe
+
+# Secretos y config local
+.env
+config.yaml
+
+# Build del frontend embebido (se genera con `make build`)
+/internal/server/dist/static/
+/internal/server/dist/index.html
+
+# Dependencias del frontend
+/frontend/node_modules/
+/frontend/dist/
+
+# Caches y temporales
+.DS_Store
+*.log
+
+/polaris-dashboard

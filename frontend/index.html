@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard</title>
+  </head>
+  <body class="min-h-screen">
+    <!-- HEADER -->
+    <header
+      class="sticky top-0 z-40 border-b border-border-subtle bg-bg-base/85 backdrop-blur-xl"
+      x-data="search($store.app.branding)"
+      x-init="focusOnDesktop()"
+    >
+      <div class="mx-auto max-w-[1400px] px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
+        <div class="flex items-center justify-between gap-3 md:contents">
+          <!-- Logo / nombre -->
+          <a href="/" class="chip flex items-center gap-2 shrink-0 px-2.5 py-2">
+            <span
+              class="icon-tile w-8 h-8 font-bold"
+              x-text="($store.app.branding.name || 'D').charAt(0)"
+            ></span>
+            <span class="font-semibold text-base" x-text="$store.app.branding.name"></span>
+          </a>
+
+          <!-- Estado de datos: última actualización + refrescar -->
+          <div
+            x-data="status"
+            class="flex items-center gap-2 shrink-0 text-sm md:order-3"
+          >
+            <div class="hidden sm:flex flex-col items-end leading-tight">
+              <span class="text-[10px] uppercase tracking-wider text-text-muted">Actualizado</span>
+              <span class="font-mono text-xs text-text-secondary" x-text="label"></span>
+            </div>
+            <button
+              @click="refresh()"
+              :disabled="refreshing"
+              class="icon-tile w-9 h-9 text-text-secondary hover:text-text-primary disabled:opacity-60"
+              title="Refrescar datos"
+              aria-label="Refrescar datos"
+            >
+              <svg
+                class="w-4 h-4"
+                :class="refreshing && 'animate-spin'"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+              >
+                <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Búsqueda -->
+        <form class="flex-1 md:max-w-[480px] md:mx-auto" @submit.prevent="submit()">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              x-ref="input"
+              x-model="query"
+              type="text"
+              :placeholder="label"
+              class="focus-control w-full rounded-full bg-bg-surface border border-border pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted shadow-sm"
+            />
+          </div>
+        </form>
+
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-[1400px] px-4 py-5 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-4">
+      <aside class="space-y-4 animate-fade-up lg:sticky lg:top-24 lg:self-start">
+        <section x-data="weather($store.app.weather?.units)">
+          <h2 class="text-xs uppercase tracking-wider text-text-secondary mb-2">Clima</h2>
+          <div class="card p-4 min-h-36">
+            <template x-if="loading"><div class="skeleton h-24"></div></template>
+            <template x-if="!loading && data">
+              <div>
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <div class="text-xs text-text-muted" x-text="data.location"></div>
+                    <div class="text-2xl font-mono mt-1" x-text="temp()"></div>
+                    <div class="text-sm text-text-secondary" x-text="data.description"></div>
+                  </div>
+                  <span class="text-5xl" x-text="icon(data.code)"></span>
+                </div>
+                <dl class="grid grid-cols-3 gap-2 text-xs mt-4 pt-3 border-t border-border-subtle">
+                  <div><dt class="text-text-muted">Sens.</dt><dd class="font-mono" x-text="feels()"></dd></div>
+                  <div><dt class="text-text-muted">Hum.</dt><dd class="font-mono" x-text="data.humidity + '%'"></dd></div>
+                  <div><dt class="text-text-muted">Viento</dt><dd class="font-mono" x-text="data.wind_kph + 'k'"></dd></div>
+                </dl>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <section x-data="calendar($store.app.calendar?.first_day_of_week)">
+          <h2 class="text-xs uppercase tracking-wider text-text-secondary mb-2">Calendario</h2>
+          <div class="card p-3">
+            <div class="flex items-center justify-between mb-2">
+              <button @click="prev()" class="icon-tile w-7 h-7 text-text-secondary hover:text-text-primary">‹</button>
+              <span class="text-sm font-medium capitalize" x-text="monthLabel"></span>
+              <button @click="next()" class="icon-tile w-7 h-7 text-text-secondary hover:text-text-primary">›</button>
+            </div>
+            <div class="grid grid-cols-7 gap-0.5 text-center text-xs">
+              <template x-for="d in weekdays"><span class="text-text-muted py-1" x-text="d.slice(0,1)"></span></template>
+              <template x-for="(cell, i) in days" :key="i">
+                <span
+                  class="py-1 rounded-md text-xs"
+                  :class="{
+                    'text-text-muted': !cell.current,
+                    'bg-accent text-bg-base font-semibold': cell.today,
+                    'text-text-primary': cell.current && !cell.today
+                  }"
+                  x-text="cell.day"
+                ></span>
+              </template>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <div class="space-y-4 min-w-0">
+        <!-- PROXMOX RESUMEN -->
+        <section class="animate-fade-up" x-data="proxmox">
+          <h2 class="text-xs uppercase tracking-wider text-text-secondary mb-3">Infraestructura · Proxmox</h2>
+
+          <template x-if="loading">
+            <div class="skeleton h-40"></div>
+          </template>
+
+          <div x-show="!loading" class="space-y-4">
+            <!-- Franja de resumen del cluster -->
+            <div class="card p-3 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-sm">
+              <div class="flex items-center gap-2">
+                <span class="dot" :class="onlineNodes === nodes.length ? 'dot-online' : 'dot-offline'"></span>
+                <span class="text-text-secondary">Nodos</span>
+                <span class="font-mono" x-text="onlineNodes + '/' + nodes.length"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-text-secondary">CPU prom.</span>
+                <span class="font-mono" x-text="avgCpuPct + '%'"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-text-secondary">RAM</span>
+                <span class="font-mono" x-text="memPercent + '%'"></span>
+                <span class="text-text-muted hidden sm:inline" x-text="bytes(totalMemUsed) + ' / ' + bytes(totalMemTotal)"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-text-secondary">Disco</span>
+                <span class="font-mono" x-text="diskPercent + '%'"></span>
+                <span class="text-text-muted hidden sm:inline" x-text="bytes(totalDiskUsed) + ' / ' + bytes(totalDiskTotal)"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-text-secondary">Guests</span>
+                <span class="font-mono" x-text="runningGuests + '/' + totalGuests"></span>
+              </div>
+              <div class="flex items-center gap-2 ml-auto">
+                <span class="text-text-secondary">Uptime máx.</span>
+                <span class="font-mono" x-text="uptime(longestUptime)"></span>
+              </div>
+            </div>
+
+            <!-- Tarjetas compactas de nodo (abren detalle en sidepanel) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              <template x-for="node in nodes" :key="node.name">
+                <button
+                  @click="open(node)"
+                  class="card card-hover p-4 text-left flex flex-col"
+                  :class="(!node.online || node.error) && 'opacity-75'"
+                >
+                  <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="dot" :class="node.online && !node.error ? 'dot-online' : 'dot-offline'"></span>
+                        <h3 class="font-semibold truncate" x-text="node.name"></h3>
+                      </div>
+                      <p class="text-xs text-text-muted truncate" x-text="node.version"></p>
+                    </div>
+                    <span class="chip px-2.5 py-1 text-xs" :class="healthClass(node)" x-text="healthLabel(node)"></span>
+                  </div>
+
+                  <template x-if="node.error">
+                    <p class="text-sm text-danger" x-text="node.error"></p>
+                  </template>
+                  <template x-if="!node.error">
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-3 gap-3">
+                        <template x-for="metric in metricRows()" :key="node.name + metric.key">
+                          <div>
+                            <div class="text-[10px] uppercase tracking-wider text-text-muted" x-text="metric.label"></div>
+                            <div class="font-mono text-sm mt-0.5" x-text="metric.value(node) + '%'"></div>
+                            <div class="h-1.5 rounded-full bg-bg-elevated overflow-hidden mt-1.5">
+                              <div class="h-full rounded-full" :style="`width:${metric.value(node)}%; background:${barColor(metric.value(node))}`"></div>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+
+                      <div x-html="sparkSvg(node, 'cpu')"></div>
+
+                      <div class="flex items-center justify-between text-xs pt-1">
+                        <span class="text-text-secondary">
+                          Guests
+                          <span class="font-mono text-text-primary" x-text="runningGuestsForNode(node) + '/' + (node.guests || []).length"></span>
+                        </span>
+                        <span class="icon-tile w-7 h-7 text-accent shrink-0" title="Ver detalle">
+                          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </span>
+                      </div>
+                    </div>
+                  </template>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Sidepanel detalle de nodo (teleport a body: se monta sobre toda la app) -->
+          <template x-teleport="body">
+          <div x-show="selected" x-transition.opacity class="fixed inset-0 z-[60]" style="display:none">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="close()"></div>
+            <aside
+              class="absolute right-0 top-0 h-full w-full sm:w-[520px] bg-bg-surface border-l border-border overflow-y-auto shadow-2xl"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="translate-x-full"
+              x-transition:enter-end="translate-x-0"
+              x-transition:leave="transition ease-in duration-200"
+              x-transition:leave-start="translate-x-0"
+              x-transition:leave-end="translate-x-full"
+            >
+              <template x-if="selected">
+                <div class="p-5 space-y-5">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="dot" :class="selected.online && !selected.error ? 'dot-online' : 'dot-offline'"></span>
+                        <h3 class="text-lg font-semibold truncate" x-text="selected.name"></h3>
+                        <span class="chip px-2 py-0.5 text-[10px]" :class="healthClass(selected)" x-text="healthLabel(selected)"></span>
+                      </div>
+                      <p class="text-xs text-text-muted truncate mt-0.5" x-text="selected.version"></p>
+                    </div>
+                    <button @click="close()" class="icon-tile w-8 h-8 text-text-secondary hover:text-text-primary shrink-0">✕</button>
+                  </div>
+
+                  <!-- Métricas -->
+                  <div class="grid grid-cols-3 gap-3">
+                    <template x-for="metric in metricRows()" :key="'panel-' + metric.key">
+                      <div class="surface-inset p-3">
+                        <div class="text-[10px] uppercase tracking-wider text-text-muted" x-text="metric.label"></div>
+                        <div class="font-mono text-lg mt-1" x-text="metric.value(selected) + '%'"></div>
+                        <div class="h-1.5 rounded-full bg-bg-elevated overflow-hidden mt-2">
+                          <div class="h-full rounded-full" :style="`width:${metric.value(selected)}%; background:${barColor(metric.value(selected))}`"></div>
+                        </div>
+                        <div class="text-[10px] text-text-muted mt-1.5 truncate" x-text="metric.text(selected)"></div>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- Histórico CPU -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <h4 class="text-xs uppercase tracking-wider text-text-secondary">CPU</h4>
+                      <span class="font-mono text-xs text-text-muted" x-text="cpuPct(selected) + '%'"></span>
+                    </div>
+                    <div class="relative h-40 overflow-hidden surface-inset p-2">
+                      <div x-html="nodeChartSvg(selected, 'cpu')"></div>
+                      <div class="absolute bottom-1 left-8 right-2 flex justify-between text-[10px] text-text-muted">
+                        <template x-for="label in chartXLabels()" :key="label"><span x-text="label"></span></template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Guests -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <h4 class="text-xs uppercase tracking-wider text-text-secondary">Guests (VMs / LXC)</h4>
+                      <span class="font-mono text-xs text-text-muted" x-text="runningGuestsForNode(selected) + '/' + (selected.guests || []).length"></span>
+                    </div>
+                    <div class="surface-inset divide-y divide-border-subtle">
+                      <template x-for="g in sortedGuests(selected)" :key="g.vmid">
+                        <div class="flex items-center justify-between text-xs px-3 py-2" :class="g.status !== 'running' && 'opacity-50'">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span class="dot" :class="g.status === 'running' ? 'dot-online' : 'dot-unknown'"></span>
+                            <span class="font-mono text-text-muted" x-text="g.vmid"></span>
+                            <span class="truncate" x-text="g.name"></span>
+                          </div>
+                          <span class="font-mono text-text-secondary shrink-0" x-text="guestCpu(g)"></span>
+                        </div>
+                      </template>
+                      <template x-if="!(selected.guests || []).length">
+                        <div class="text-xs text-text-muted px-3 py-2">Sin guests.</div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </aside>
+          </div>
+          </template>
+        </section>
+
+        <!-- ACCESOS DIRECTOS -->
+        <section class="animate-fade-up" x-data="services">
+          <h2 class="text-xs uppercase tracking-wider text-text-secondary mb-3">Accesos rápidos</h2>
+
+          <template x-if="loading">
+            <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-3">
+              <template x-for="i in 8"><div class="skeleton h-16"></div></template>
+            </div>
+          </template>
+
+          <div x-show="!loading" class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
+            <template x-for="svc in sortedItems" :key="svc.name">
+              <a
+                :href="svc.url" target="_blank" rel="noopener"
+                class="card card-hover relative p-3 flex items-center gap-3 text-left min-h-16"
+              >
+                <span class="dot absolute top-2 right-2" :class="dotClass(svc.status)"></span>
+                <span class="icon-tile relative w-8 h-8 font-mono font-semibold shrink-0">
+                  <span x-text="serviceInitial(svc.name)"></span>
+                  <img :src="iconURL(svc.icon)" :alt="svc.name" class="absolute inset-0 w-8 h-8 object-contain" loading="lazy" onerror="this.remove()" />
+                </span>
+                <span class="min-w-0">
+                  <span class="block text-sm font-medium truncate" x-text="svc.name"></span>
+                  <span class="block text-[10px] uppercase tracking-wider text-text-muted truncate" x-text="svc.category || 'General'"></span>
+                </span>
+              </a>
+            </template>
+          </div>
+        </section>
+
+        <!-- DOCKER / ARCANE -->
+        <section class="animate-fade-up" x-data="docker">
+          <h2 class="text-xs uppercase tracking-wider text-text-secondary mb-3">Contenedores · Arcane</h2>
+
+          <template x-if="loading">
+            <div class="skeleton h-48"></div>
+          </template>
+
+          <div x-show="!loading" class="card p-4 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="icon-tile w-9 h-9 text-accent">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                </span>
+                <div>
+                  <div class="text-lg font-semibold">
+                    Docker Containers
+                    <span class="text-text-secondary font-normal">(<span x-text="runningCount"></span> running)</span>
+                  </div>
+                  <div class="text-xs text-text-secondary">
+                    <span class="font-mono" x-text="instances.length"></span>
+                    Arcane ·
+                    <span class="font-mono" x-text="allContainers.length"></span>
+                    contenedores agrupados
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <template x-for="instance in instances" :key="instance.name">
+                  <span class="chip px-2.5 py-1 text-xs flex items-center gap-2">
+                    <span class="dot" :class="instance.error ? 'dot-offline' : 'dot-online'"></span>
+                    <span x-text="instance.name"></span>
+                    <span class="font-mono text-text-muted" x-text="instanceRunning(instance) + '/' + instanceContainers(instance).length"></span>
+                  </span>
+                </template>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-[repeat(auto-fit,minmax(245px,1fr))] gap-3">
+              <template x-for="c in sorted" :key="(c.arcaneName || 'Arcane') + ':' + c.id">
+                <button
+                  @click="open(c)"
+                  class="card card-hover p-4 text-left min-h-44 flex flex-col"
+                  :class="c.status !== 'running' && 'opacity-75'"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
+                      <span class="icon-tile w-10 h-10 text-text-secondary font-mono font-semibold shrink-0" x-text="containerInitial(c)"></span>
+                      <span class="min-w-0">
+                        <span class="block text-base font-semibold truncate" x-text="c.name"></span>
+                        <span class="block text-xs text-text-muted font-mono truncate" x-text="c.image"></span>
+                      </span>
+                    </div>
+                    <span
+                      class="rounded-full border px-2.5 py-1 text-xs font-medium shrink-0"
+                      :class="statusPillClass(c.status)"
+                    >
+                      <span x-text="statusLabel(c.status)"></span>
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4 mt-5">
+                    <div>
+                      <div class="text-xs text-text-muted">CPU</div>
+                      <div class="font-mono text-base" x-text="cpu(c)"></div>
+                    </div>
+                    <div>
+                      <div class="text-xs text-text-muted">Memory</div>
+                      <div class="font-mono text-base" x-text="bytes(c.mem_used)"></div>
+                    </div>
+                  </div>
+
+                  <div class="mt-auto pt-4 flex items-end justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="text-xs text-text-muted">
+                        Uptime:
+                        <span x-text="uptime(c.uptime)"></span>
+                      </div>
+                      <div class="mt-2 chip inline-flex max-w-full px-2.5 py-1 text-xs text-text-secondary">
+                        <span class="truncate">Arcane: <span class="text-text-primary" x-text="c.arcaneName || 'Arcane'"></span></span>
+                      </div>
+                    </div>
+                    <span class="icon-tile w-8 h-8 text-accent shrink-0" title="Ver detalle y logs">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </span>
+                  </div>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Sidepanel detalle de contenedor (teleport a body: se monta sobre toda la app) -->
+          <template x-teleport="body">
+          <div x-show="selected" x-transition.opacity class="fixed inset-0 z-[60]" style="display:none">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="close()"></div>
+            <aside
+              class="absolute right-0 top-0 h-full w-full sm:w-[520px] bg-bg-surface border-l border-border overflow-y-auto shadow-2xl"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="translate-x-full"
+              x-transition:enter-end="translate-x-0"
+              x-transition:leave="transition ease-in duration-200"
+              x-transition:leave-start="translate-x-0"
+              x-transition:leave-end="translate-x-full"
+            >
+              <template x-if="selected">
+                <div class="p-5 space-y-5">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
+                      <span class="icon-tile w-10 h-10 text-text-secondary font-mono font-semibold shrink-0" x-text="containerInitial(selected)"></span>
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="dot" :class="dotClass(selected.status)"></span>
+                          <h3 class="text-lg font-semibold truncate" x-text="selected.name"></h3>
+                        </div>
+                        <p class="text-xs text-text-muted truncate mt-0.5" x-text="(selectedInstance?.name || 'Arcane') + ' · ' + (selected.image || '')"></p>
+                      </div>
+                    </div>
+                    <button @click="close()" class="icon-tile w-8 h-8 text-text-secondary hover:text-text-primary shrink-0">✕</button>
+                  </div>
+
+                  <div class="grid grid-cols-3 gap-3">
+                    <div class="surface-inset p-3">
+                      <div class="text-[10px] uppercase tracking-wider text-text-muted">CPU</div>
+                      <div class="font-mono text-lg mt-1" x-text="cpu(selected)"></div>
+                    </div>
+                    <div class="surface-inset p-3">
+                      <div class="text-[10px] uppercase tracking-wider text-text-muted">RAM</div>
+                      <div class="font-mono text-lg mt-1" x-text="bytes(selected.mem_used)"></div>
+                    </div>
+                    <div class="surface-inset p-3">
+                      <div class="text-[10px] uppercase tracking-wider text-text-muted">Uptime</div>
+                      <div class="font-mono text-lg mt-1" x-text="uptime(selected.uptime)"></div>
+                    </div>
+                  </div>
+
+                  <dl class="surface-inset p-3 text-sm divide-y divide-border-subtle">
+                    <div class="flex justify-between gap-3 py-1.5"><dt class="text-text-secondary">Imagen</dt><dd class="font-mono text-right truncate" x-text="selected.image"></dd></div>
+                    <div class="flex justify-between gap-3 py-1.5"><dt class="text-text-secondary">Estado</dt><dd x-text="selected.status"></dd></div>
+                    <div class="flex justify-between gap-3 py-1.5"><dt class="text-text-secondary">RAM</dt><dd class="font-mono" x-text="mem(selected)"></dd></div>
+                  </dl>
+
+                  <div>
+                    <h4 class="text-xs uppercase tracking-wider text-text-secondary mb-2">Logs (últimas 50)</h4>
+                    <div class="surface-inset p-3 text-xs font-mono max-h-96 overflow-y-auto whitespace-pre-wrap">
+                      <template x-if="logsLoading"><span class="text-text-muted">Cargando…</span></template>
+                      <template x-for="line in logs"><div x-text="line"></div></template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </aside>
+          </div>
+          </template>
+        </section>
+      </div>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+# =============================================================================
+#  docker-compose.yml — deploy de producción
+# =============================================================================
+#  Uso:
+#    1. Copia .env.example a .env y rellena los secretos.
+#    2. Copia config.example.yaml a config.yaml y ajústalo.
+#    3. docker compose up -d
+# =============================================================================
+
+services:
+  dashboard:
+    build: .
+    # O usa una imagen ya publicada:
+    # image: ghcr.io/tu-usuario/polaris-dashboard:latest
+    container_name: polaris-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-80}:3000"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      # Secretos referenciados como ${VAR} dentro de config.yaml
+      - PROXMOX_NODE1_TOKEN=${PROXMOX_NODE1_TOKEN}
+      - PROXMOX_NODE2_TOKEN=${PROXMOX_NODE2_TOKEN}
+      - ARCANE_API_KEY=${ARCANE_API_KEY}
+    # Descomenta si el dashboard debe hablar con servicios en una red Docker:
+    # networks:
+    #   - internal
+
+# networks:
+#   internal:
+#     external: true

@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/*
+ * Tailwind v4 — configuración CSS-first.
+ *
+ * Los tokens del sistema de diseño se declaran en @theme. En v4 esto cumple dos
+ * funciones a la vez:
+ *   1. Genera las utilidades (bg-accent, rounded-lg, text-2xl, …).
+ *   2. Expone cada token como CSS custom property en :root.
+ * Las utilidades generadas referencian la variable (background: var(--color-accent)),
+ * así que cuando theme.js sobreescribe --color-accent en runtime con el valor
+ * del config.yaml, TODA la UI cambia en vivo. Ese es el mecanismo de whitelabeling.
+ *
+ * Mantener sincronizado con internal/config/config.go (defaultColors / defaultRadius).
+ */
+@theme {
+  --color-bg-base: #0f172a;
+  --color-bg-surface: #1e293b;
+  --color-bg-elevated: #263449;
+  --color-border: #334155;
+  --color-border-subtle: #263449;
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-accent: #38bdf8;
+  --color-accent-glow: #004b50;
+  --color-success: #a3e635;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #7dd3fc;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  --font-sans: "Inter", "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+}
+
+/* Dark mode basado en clase (v1 es dark-only; listo para un light theme futuro). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-bg-base text-text-primary font-sans antialiased;
+    background-image:
+      linear-gradient(180deg, rgba(56, 189, 248, 0.035), rgba(11, 15, 25, 0) 280px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-size: auto, 48px 48px, 48px 48px;
+  }
+}
+
+@layer components {
+  /* HeroUI-inspired surface: clean border, soft elevation, dark palette. */
+  .card {
+    @apply bg-bg-surface border border-border rounded-lg transition duration-150;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.28),
+      0 12px 30px rgba(0, 0, 0, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  }
+  .card-hover:hover {
+    @apply -translate-y-px border-accent;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 16px 38px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(56, 189, 248, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .surface-inset {
+    @apply bg-bg-base border border-border-subtle rounded-md;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  }
+
+  .chip {
+    @apply rounded-full bg-bg-elevated border border-border-subtle;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .icon-tile {
+    @apply grid place-items-center rounded-md bg-bg-elevated text-accent;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 1px 1px rgba(0, 0, 0, 0.16);
+  }
+
+  .focus-control {
+    @apply outline-none transition;
+  }
+  .focus-control:focus {
+    @apply border-accent;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+  }
+
+  /* Dot de estado */
+  .dot {
+    @apply inline-block w-2 h-2 rounded-full;
+  }
+  .dot-online {
+    @apply bg-success;
+    animation: pulse-dot 2s infinite;
+  }
+  .dot-offline {
+    @apply bg-danger;
+  }
+  .dot-unknown {
+    @apply bg-text-muted;
+  }
+}
+
+/* --- Animaciones --- */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s ease both;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 25%,
+    var(--color-border) 37%,
+    var(--color-bg-elevated) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Respeto a prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

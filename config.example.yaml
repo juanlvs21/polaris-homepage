@@ -1,0 +1,98 @@
+# =============================================================================
+#  config.example.yaml — Configuración de ejemplo del dashboard
+# =============================================================================
+#  Copia este archivo a `config.yaml` y ajústalo a tu infraestructura.
+#  Los secretos (tokens, API keys) NO van aquí: se referencian con ${VAR} y se
+#  inyectan como variables de entorno (ver .env.example).
+# =============================================================================
+
+server:
+  host: "0.0.0.0"
+  port: 3000
+
+# --- WHITELABELING -----------------------------------------------------------
+# Esta sección define la identidad del producto. Cambiándola, el mismo binario
+# se convierte en cualquier marca, sin recompilar.
+branding:
+  name: "Polaris"                       # Nombre en el header y el <title>
+  tagline: "Panel de control de la casa"
+  logo_url: ""                          # Vacío = inicial del nombre en un chip
+  favicon_url: ""                       # Ruta a un favicon propio (opcional)
+  search_url: "https://www.google.com/search?q="
+  search_label: "Buscar en Google…"
+
+# --- TEMA / DESIGN TOKENS ----------------------------------------------------
+# Colores y radios se inyectan como CSS custom properties en el frontend.
+# Solo necesitas redefinir los tokens que quieras cambiar; el resto toma los
+# valores por defecto. Ver DESIGN.md.
+theme:
+  mode: dark                            # dark | light (v1: dark)
+  colors:
+    bg-base: "#0F172A"
+    bg-surface: "#1E293B"
+    bg-elevated: "#263449"
+    border: "#334155"
+    border-subtle: "#263449"
+    text-primary: "#E2E8F0"
+    text-secondary: "#94A3B8"
+    text-muted: "#64748B"
+    accent: "#38BDF8"
+    accent-glow: "#004B50"
+    success: "#A3E635"
+    warning: "#F59E0B"
+    danger: "#EF4444"
+    info: "#7DD3FC"
+  radius:
+    sm: "8px"
+    md: "12px"
+    lg: "16px"
+    xl: "22px"
+  font:
+    sans: "Inter, Geist, system-ui, sans-serif"
+    mono: "'Geist Mono', ui-monospace, monospace"
+
+weather:
+  location: "Caracas, Venezuela"
+  units: metric                         # metric | imperial
+
+calendar:
+  first_day_of_week: monday             # monday | sunday
+
+# --- INTEGRACIONES (opcionales) ----------------------------------------------
+proxmox:
+  - name: "Polaris-1"
+    host: "https://192.168.1.10:8006"
+    token_id: "dashboard@pve!polaris"
+    token_secret: "${PROXMOX_NODE1_TOKEN}"
+    verify_tls: false
+  - name: "Polaris-2"
+    host: "https://192.168.1.11:8006"
+    token_id: "dashboard@pve!polaris"
+    token_secret: "${PROXMOX_NODE2_TOKEN}"
+    verify_tls: false
+
+arcane:
+  - name: "Arcane Core"
+    host: "http://arcane.webapp.casa"
+    api_key: "${ARCANE_API_KEY}"
+  - name: "Arcane Media"
+    host: "http://arcane-media.webapp.casa"
+    api_key: "${ARCANE_MEDIA_API_KEY}"
+
+services:
+  - name: "Gitea"
+    url: "http://gitea.webapp.casa"
+    icon: "gitea.svg"
+    category: "Dev"
+  - name: "Jellyfin"
+    url: "http://jellyfin.webapp.casa"
+    icon: "jellyfin.svg"
+    category: "Media"
+  - name: "Proxmox"
+    url: "https://proxmox.webapp.casa:8006"
+    icon: "proxmox.svg"
+    category: "Infra"
+  - name: "Arcane"
+    url: "http://arcane.webapp.casa"
+    icon: "docker.svg"
+    category: "Infra"
