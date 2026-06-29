@@ -7,8 +7,7 @@
 config.yaml
 
 # Build del frontend embebido (se genera con `make build`)
-/internal/server/dist/static/
-/internal/server/dist/index.html
+/internal/server/dist
 
 # Dependencias del frontend
 /frontend/node_modules/
