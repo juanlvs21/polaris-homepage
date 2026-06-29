@@ -50,3 +50,11 @@ func (e *Entry[T]) Set(value T) {
 	e.hasValue = true
 	e.expiresAt = time.Now().Add(e.ttl)
 }
+
+// Invalidate marca la entrada como expirada para forzar un refetch en el
+// siguiente Get. Se usa tras una mutación (p. ej. start/stop de un contenedor).
+func (e *Entry[T]) Invalidate() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.expiresAt = time.Time{}
+}

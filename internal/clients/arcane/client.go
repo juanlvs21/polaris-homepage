@@ -90,6 +90,19 @@ func (c *Client) Containers() ([]Container, error) {
 	return out, nil
 }
 
+// Action ejecuta una acción de ciclo de vida sobre un contenedor
+// (start | stop | restart). Arcane expone POST /api/containers/{id}/{action}.
+func (c *Client) Action(id, action string) error {
+	r, err := c.http.R().Post("/api/containers/" + id + "/" + action)
+	if err != nil {
+		return fmt.Errorf("arcane inalcanzable: %w", err)
+	}
+	if r.IsError() {
+		return fmt.Errorf("arcane respondió %d", r.StatusCode())
+	}
+	return nil
+}
+
 // Logs devuelve las últimas `tail` líneas de logs de un contenedor.
 func (c *Client) Logs(id string, tail int) ([]string, error) {
 	var raw struct {

@@ -86,6 +86,7 @@ func (h *Handlers) Register(app *fiber.App) {
 	api.Get("/unifi", h.Unifi)
 	api.Get("/docker", h.Docker)
 	api.Get("/docker/:id/logs", h.DockerLogs)
+	api.Post("/docker/:id/:action", h.DockerAction)
 	api.Get("/icons/:name", h.Icon)
 }
 

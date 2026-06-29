@@ -482,57 +482,113 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(245px,1fr))] gap-3">
-            <template x-for="c in sorted" :key="(c.arcaneName || 'Arcane') + ':' + c.id">
-              <button @click="open(c)" class="card card-hover p-4 text-left min-h-44 flex flex-col"
-                :class="c.status !== 'running' && 'opacity-75'">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="flex items-start gap-3 min-w-0">
-                    <span class="icon-tile w-10 h-10 text-text-secondary font-mono font-semibold shrink-0"
-                      x-text="containerInitial(c)"></span>
-                    <span class="min-w-0">
-                      <span class="block text-base font-semibold truncate" x-text="c.name"></span>
-                      <span class="block text-xs text-text-muted font-mono truncate" x-text="c.image"></span>
-                    </span>
-                  </div>
-                  <span class="rounded-full border px-2.5 py-1 text-xs font-medium shrink-0"
-                    :class="statusPillClass(c.status)">
-                    <span x-text="statusLabel(c.status)"></span>
-                  </span>
-                </div>
+          <div class="overflow-x-auto -mx-1">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="text-left text-text-secondary border-b border-border">
+                  <th class="font-semibold py-2.5 px-3">Name</th>
+                  <th class="font-semibold py-2.5 px-3">State</th>
+                  <th class="font-semibold py-2.5 px-3">Host</th>
+                  <th class="font-semibold py-2.5 px-3 text-right">CPU</th>
+                  <th class="font-semibold py-2.5 px-3 text-right">Memory</th>
+                  <th class="font-semibold py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="c in sorted" :key="(c.arcaneName || 'Arcane') + ':' + c.id">
+                  <tr @click="open(c)"
+                    class="group border-b border-border-subtle last:border-0 cursor-pointer transition-colors hover:bg-bg-elevated/60"
+                    :class="c.status !== 'running' && 'opacity-60'">
+                    <!-- Name -->
+                    <td class="py-2.5 px-3">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <span class="icon-tile w-8 h-8 shrink-0 overflow-hidden relative">
+                          <img :src="iconURL(c)" :alt="c.name" loading="lazy"
+                            class="w-full h-full object-contain"
+                            @error="$el.style.display='none'; $el.nextElementSibling.style.display='grid'" />
+                          <span style="display:none"
+                            class="absolute inset-0 place-items-center font-mono font-semibold text-text-secondary text-sm"
+                            x-text="containerInitial(c)"></span>
+                        </span>
+                        <div class="min-w-0">
+                          <div class="font-medium truncate" x-text="c.name"></div>
+                          <div class="text-xs text-text-muted font-mono truncate" x-text="c.image"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <!-- State -->
+                    <td class="py-2.5 px-3">
+                      <span class="inline-block rounded-md border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"
+                        :class="statusPillClass(c.status)" x-text="statusLabel(c.status)"></span>
+                    </td>
+                    <!-- Host -->
+                    <td class="py-2.5 px-3 text-text-secondary" x-text="hostLabel(c)"></td>
+                    <!-- CPU -->
+                    <td class="py-2.5 px-3 text-right font-mono" :class="cpuColor(c)" x-text="cpu(c)"></td>
+                    <!-- Memory -->
+                    <td class="py-2.5 px-3 text-right font-mono" :class="memColor(c)" x-text="bytes(c.mem_used)"></td>
+                    <!-- Actions -->
+                    <td class="py-2.5 px-3">
+                      <div class="flex items-center justify-end gap-1.5" @click.stop>
+                        <!-- Start / Stop toggle -->
+                        <template x-if="c.status === 'running'">
+                          <button @click="action(c, 'stop')" :disabled="!!acting" title="Stop"
+                            class="icon-tile w-8 h-8 text-danger hover:bg-danger/15 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <svg x-show="!isActing(c, 'stop')" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <rect x="6" y="6" width="12" height="12" rx="1.5" />
+                            </svg>
+                            <svg x-show="isActing(c, 'stop')" class="w-4 h-4 animate-spin" viewBox="0 0 24 24"
+                              fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                          </button>
+                        </template>
+                        <template x-if="c.status !== 'running'">
+                          <button @click="action(c, 'start')" :disabled="!!acting" title="Start"
+                            class="icon-tile w-8 h-8 text-success hover:bg-success/15 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <svg x-show="!isActing(c, 'start')" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"
+                              aria-hidden="true">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                            <svg x-show="isActing(c, 'start')" class="w-4 h-4 animate-spin" viewBox="0 0 24 24"
+                              fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                          </button>
+                        </template>
+                        <!-- Restart -->
+                        <button @click="action(c, 'restart')" :disabled="!!acting" title="Restart"
+                          class="icon-tile w-8 h-8 text-accent hover:bg-accent/15 disabled:opacity-40 disabled:cursor-not-allowed">
+                          <svg class="w-4 h-4" :class="isActing(c, 'restart') && 'animate-spin'" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                            <path d="M3 3v5h5" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
 
-                <div class="grid grid-cols-2 gap-4 mt-5">
-                  <div>
-                    <div class="text-xs text-text-muted">CPU</div>
-                    <div class="font-mono text-base" x-text="cpu(c)"></div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-text-muted">Memory</div>
-                    <div class="font-mono text-base" x-text="bytes(c.mem_used)"></div>
-                  </div>
-                </div>
-
-                <div class="mt-auto pt-4 flex items-end justify-between gap-3">
-                  <div class="min-w-0">
-                    <div class="text-xs text-text-muted">
-                      Uptime:
-                      <span x-text="uptime(c.uptime)"></span>
-                    </div>
-                    <div class="mt-2 chip inline-flex max-w-full px-2.5 py-1 text-xs text-text-secondary">
-                      <span class="truncate">Arcane: <span class="text-text-primary"
-                          x-text="c.arcaneName || 'Arcane'"></span></span>
-                    </div>
-                  </div>
-                  <span class="icon-tile w-8 h-8 text-accent shrink-0" title="Ver detalle y logs">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                      aria-hidden="true">
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </span>
-                </div>
-              </button>
-            </template>
+          <!-- Footer con totales -->
+          <div
+            class="flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-border pt-3 text-xs text-text-secondary">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                aria-hidden="true">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                <path d="m3.3 7 8.7 5 8.7-5" />
+                <path d="M12 22V12" />
+              </svg>
+              Total <span class="font-mono text-text-primary" x-text="totalCount"></span> containers
+            </span>
+            <span>Total CPU: <span class="font-mono text-text-primary" x-text="totalCpu.toFixed(2) + '%'"></span></span>
+            <span>Total Mem: <span class="font-mono text-text-primary" x-text="bytes(totalMem)"></span></span>
+            <span class="ms-auto" x-text="updatedLabel"></span>
           </div>
         </div>
 

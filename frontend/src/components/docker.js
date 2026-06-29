@@ -1,7 +1,7 @@
 // Grid de contenedores Docker (Arcane) + drawer de detalle con logs.
 
-import { getJSON } from "../utils/fetch.js";
-import { formatBytes, formatUptime } from "../utils/format.js";
+import { getJSON, postJSON } from "../utils/fetch.js";
+import { formatBytes, formatUptime, pct, thresholdColor } from "../utils/format.js";
 
 const REFRESH_MS = 30 * 1000;
 
@@ -12,6 +12,11 @@ export function docker() {
     loading: true,
     error: false,
     stale: false,
+    updatedAt: null,
+    now: Date.now(),
+
+    // Acción en curso: { id, verb } mientras corre un start/stop/restart.
+    acting: null,
 
     // Drawer
     selected: null,
@@ -23,6 +28,8 @@ export function docker() {
     async init() {
       await this.load();
       setInterval(() => this.load(), REFRESH_MS);
+      // Mantiene viva la etiqueta relativa ("Updated Xs ago").
+      setInterval(() => (this.now = Date.now()), 10 * 1000);
       window.addEventListener("polaris:refresh", () => this.load());
       window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") this.close();
@@ -35,6 +42,7 @@ export function docker() {
         this.containers = res.containers || [];
         this.stale = !!res.stale;
         this.error = false;
+        this.updatedAt = Date.now();
         window.dispatchEvent(new CustomEvent("polaris:updated"));
       } catch {
         this.error = true;
@@ -56,6 +64,25 @@ export function docker() {
     },
     get runningCount() {
       return this.allContainers.filter((c) => c.status === "running").length;
+    },
+    get totalCount() {
+      return this.allContainers.length;
+    },
+    get totalCpu() {
+      return this.allContainers.reduce((sum, c) => sum + (c.cpu || 0), 0);
+    },
+    get totalMem() {
+      return this.allContainers.reduce((sum, c) => sum + (c.mem_used || 0), 0);
+    },
+    // Etiqueta relativa de la última actualización ("Updated Xs ago").
+    get updatedLabel() {
+      if (!this.updatedAt) return "—";
+      const secs = Math.max(0, Math.round((this.now - this.updatedAt) / 1000));
+      if (secs < 5) return "Updated just now";
+      if (secs < 60) return `Updated ${secs}s ago`;
+      const mins = Math.floor(secs / 60);
+      if (mins < 60) return `Updated ${mins}m ago`;
+      return `Updated ${Math.floor(mins / 60)}h ago`;
     },
 
     // Running primero, luego por Arcane y nombre.
@@ -120,6 +147,52 @@ export function docker() {
       this.selectedInstance = null;
       this.showEnv = false;
       document.body.style.overflow = "";
+    },
+
+    // --- Acciones de ciclo de vida (start/stop/restart) ---
+    async action(c, verb) {
+      if (this.acting) return;
+      const inst = this.instanceFor(c);
+      const query = inst?.name ? `?instance=${encodeURIComponent(inst.name)}` : "";
+      this.acting = { id: c.id, verb };
+      try {
+        await postJSON(`/api/docker/${c.id}/${verb}${query}`);
+        await this.load();
+      } catch {
+        this.error = true;
+      } finally {
+        this.acting = null;
+      }
+    },
+    isActing(c, verb) {
+      return this.acting?.id === c.id && (!verb || this.acting?.verb === verb);
+    },
+
+    // Host corto: hostname de la URL de Arcane, o el nombre de la instancia.
+    hostLabel(c) {
+      if (c?.arcaneHost) {
+        try {
+          return new URL(c.arcaneHost).hostname;
+        } catch {
+          return c.arcaneHost;
+        }
+      }
+      return c?.arcaneName || "local";
+    },
+
+    // Iconos por nombre de contenedor (mismo endpoint cacheado que los servicios).
+    iconURL(c) {
+      const slug = (c?.name || c?.image || "").split(/[:/]/).pop();
+      return slug ? `/api/icons/${encodeURIComponent(slug)}` : "/api/icons/default";
+    },
+
+    // Color por umbral: CPU sobre 100% nominal, RAM sobre su límite.
+    cpuColor(c) {
+      return `text-${thresholdColor(Math.min(100, c.cpu || 0))}`;
+    },
+    memColor(c) {
+      const percent = c.mem_limit ? pct(c.mem_used, c.mem_limit) : c.mem_used > 512 * 1024 * 1024 ? 70 : 0;
+      return `text-${thresholdColor(percent)}`;
     },
 
     dotClass(status) {
