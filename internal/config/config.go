@@ -188,20 +188,20 @@ func expandEnv(s string) string {
 // defaultColors es la paleta base usada cuando el YAML no define un token.
 // Garantiza que el frontend siempre reciba un set completo.
 var defaultColors = map[string]string{
-	"bg-base":        "#0F172A",
-	"bg-surface":     "#1E293B",
-	"bg-elevated":    "#263449",
-	"border":         "#334155",
-	"border-subtle":  "#263449",
-	"text-primary":   "#E2E8F0",
-	"text-secondary": "#94A3B8",
-	"text-muted":     "#64748B",
-	"accent":         "#38BDF8",
-	"accent-glow":    "#004B50",
-	"success":        "#A3E635",
-	"warning":        "#F59E0B",
-	"danger":         "#EF4444",
-	"info":           "#7DD3FC",
+	"bg-base":        "#131418",
+	"bg-surface":     "#1E1F24",
+	"bg-elevated":    "#2B2D33",
+	"border":         "#3A3C44",
+	"border-subtle":  "#26282E",
+	"text-primary":   "#F2F3F5",
+	"text-secondary": "#B5BAC1",
+	"text-muted":     "#80848E",
+	"accent":         "#5865F2",
+	"accent-glow":    "#2B2F77",
+	"success":        "#57F287",
+	"warning":        "#FEE75C",
+	"danger":         "#ED4245",
+	"info":           "#7984F5",
 }
 
 var defaultRadius = map[string]string{

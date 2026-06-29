@@ -76,20 +76,20 @@ Puntos clave (Tailwind v4, config CSS-first):
 
 | Token | Valor | Uso |
 |---|---|---|
-| `bg-base` | `#0F172A` | Fondo base del dashboard |
-| `bg-surface` | `#1E293B` | Cards, paneles |
-| `bg-elevated` | `#263449` | Hover, inputs |
-| `border` | `#334155` | Bordes de cards y divisores |
-| `border-subtle` | `#263449` | Bordes secundarios |
-| `text-primary` | `#E2E8F0` | Texto principal |
-| `text-secondary` | `#94A3B8` | Labels, metadata |
-| `text-muted` | `#64748B` | Texto deshabilitado |
-| `accent` | `#38BDF8` | Primary: interactivos, branding y selección |
-| `accent-glow` | `#004B50` | Variante teal para glows y profundidad |
-| `success` | `#A3E635` | Estado saludable / online |
-| `warning` | `#F59E0B` | Uso elevado |
-| `danger` | `#EF4444` | Offline / crítico |
-| `info` | `#7DD3FC` | Estados informativos |
+| `bg-base` | `#131418` | Fondo base del dashboard |
+| `bg-surface` | `#1E1F24` | Cards, paneles |
+| `bg-elevated` | `#2B2D33` | Hover, inputs |
+| `border` | `#3A3C44` | Bordes de cards y divisores |
+| `border-subtle` | `#26282E` | Bordes secundarios |
+| `text-primary` | `#F2F3F5` | Texto principal |
+| `text-secondary` | `#B5BAC1` | Labels, metadata |
+| `text-muted` | `#80848E` | Texto deshabilitado |
+| `accent` | `#5865F2` | Primary blurple: interactivos, branding y selección |
+| `accent-glow` | `#2B2F77` | Indigo profundo para glows y profundidad |
+| `success` | `#57F287` | Estado saludable / online |
+| `warning` | `#FEE75C` | Uso elevado |
+| `danger` | `#ED4245` | Offline / crítico |
+| `info` | `#7984F5` | Estados informativos |
 
 En `config.yaml` se redefinen por nombre (sin el prefijo `--color-`):
 
