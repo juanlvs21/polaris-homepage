@@ -8,6 +8,7 @@ import { loadBranding } from "./theme.js";
 import { search } from "./components/search.js";
 import { weather } from "./components/weather.js";
 import { calendar } from "./components/calendar.js";
+import { unifi } from "./components/unifi.js";
 import { services } from "./components/services.js";
 import { proxmox } from "./components/proxmox.js";
 import { docker } from "./components/docker.js";
@@ -27,6 +28,7 @@ async function bootstrap() {
   Alpine.data("search", () => search(config.branding));
   Alpine.data("weather", () => weather(config.weather?.units));
   Alpine.data("calendar", () => calendar(config.calendar?.first_day_of_week));
+  Alpine.data("unifi", unifi);
   Alpine.data("services", services);
   Alpine.data("proxmox", proxmox);
   Alpine.data("docker", docker);

@@ -110,6 +110,111 @@
           </div>
         </div>
       </section>
+
+      <!-- UNIFI · RED / WAN -->
+      <section x-data="unifi">
+        <h2 class="text-xs uppercase tracking-wider text-text-secondary mb-2">Red · UniFi</h2>
+
+        <template x-if="loading">
+          <div class="skeleton h-40"></div>
+        </template>
+
+        <template x-if="!loading && error">
+          <div class="card p-4 text-sm text-danger">No se pudo cargar UniFi.</div>
+        </template>
+
+        <template x-if="!loading && !error && !hasRouter">
+          <div class="card p-4 text-sm text-text-muted">Gateway no disponible.</div>
+        </template>
+
+        <template x-if="!loading && !error && hasRouter">
+          <div class="card p-3 space-y-3">
+            <!-- Cabecera: gateway + estado -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="dot" :class="online ? 'dot-online' : 'dot-offline'"></span>
+                <span class="text-sm font-medium truncate" x-text="router.gateway || router.name"></span>
+              </div>
+              <span class="text-[10px] uppercase tracking-wider"
+                :class="stale ? 'text-warning' : 'text-text-muted'"
+                x-text="stale ? 'stale' : (online ? 'online' : 'offline')"></span>
+            </div>
+
+            <!-- Throughput WAN en vivo -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="surface-inset p-2.5">
+                <div class="flex items-center gap-1 text-[10px] uppercase tracking-wider text-text-muted">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 5v14" />
+                    <path d="m19 12-7 7-7-7" />
+                  </svg>
+                  Bajada
+                </div>
+                <div class="font-mono text-sm mt-0.5" x-text="downRate()"></div>
+              </div>
+              <div class="surface-inset p-2.5">
+                <div class="flex items-center gap-1 text-[10px] uppercase tracking-wider text-text-muted">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 19V5" />
+                    <path d="m5 12 7-7 7 7" />
+                  </svg>
+                  Subida
+                </div>
+                <div class="font-mono text-sm mt-0.5" x-text="upRate()"></div>
+              </div>
+            </div>
+
+            <!-- Speedtest + latencia -->
+            <dl class="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <dt class="text-text-muted">Down</dt>
+                <dd class="font-mono" x-text="downloadMbps()"></dd>
+              </div>
+              <div>
+                <dt class="text-text-muted">Up</dt>
+                <dd class="font-mono" x-text="uploadMbps()"></dd>
+              </div>
+              <div>
+                <dt class="text-text-muted">Ping</dt>
+                <dd class="font-mono" x-text="latency()"></dd>
+              </div>
+            </dl>
+
+            <!-- Salud del gateway -->
+            <div class="space-y-2 pt-1 border-t border-border-subtle">
+              <div>
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="text-text-secondary">CPU</span>
+                  <span class="font-mono" x-text="cpuPct() + '%'"></span>
+                </div>
+                <div class="h-1.5 rounded-full bg-bg-elevated overflow-hidden">
+                  <div class="h-full rounded-full" :style="`width:${cpuPct()}%; background:${barColor(cpuPct())}`"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="text-text-secondary">RAM</span>
+                  <span class="font-mono" x-text="memPct() + '%'"></span>
+                </div>
+                <div class="h-1.5 rounded-full bg-bg-elevated overflow-hidden">
+                  <div class="h-full rounded-full" :style="`width:${memPct()}%; background:${barColor(memPct())}`"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Clientes + uptime -->
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-border-subtle">
+              <span class="text-text-secondary">
+                <span class="font-mono text-text-primary" x-text="clients()"></span> clientes
+                <span class="text-text-muted" x-text="clientsBreakdown()"></span>
+              </span>
+              <span class="font-mono text-text-muted" x-text="uptime()"></span>
+            </div>
+          </div>
+        </template>
+      </section>
     </aside>
 
     <div class="space-y-4 min-w-0">
