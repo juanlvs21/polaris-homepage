@@ -320,7 +320,7 @@
                 <span x-text="serviceInitial(svc.name)"></span>
                 <img :src="iconURL(svc.icon)" :alt="svc.name" class="absolute inset-0 w-8 h-8 object-contain"
                   loading="lazy"
-                  onerror="this.src.endsWith('/icons/default.svg') ? this.remove() : this.src = '/icons/default.svg'" />
+                  onerror="this.src.endsWith('/api/icons/default') ? this.remove() : this.src = '/api/icons/default'" />
               </span>
               <span class="min-w-0">
                 <span class="block text-sm font-medium truncate" x-text="svc.name"></span>

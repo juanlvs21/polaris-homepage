@@ -71,6 +71,7 @@ func (h *Handlers) Register(app *fiber.App) {
 	api.Get("/proxmox", h.Proxmox)
 	api.Get("/docker", h.Docker)
 	api.Get("/docker/:id/logs", h.DockerLogs)
+	api.Get("/icons/:name", h.Icon)
 }
 
 // Health responde un simple ping de liveness.

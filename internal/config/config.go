@@ -27,6 +27,16 @@ type Config struct {
 	Proxmox  []ProxmoxConfig `mapstructure:"proxmox"`
 	Arcane   []ArcaneConfig  `mapstructure:"arcane"`
 	Services []ServiceConfig `mapstructure:"services"`
+	Icons    IconsConfig     `mapstructure:"icons"`
+}
+
+// IconsConfig controla el proxy con caché de iconos de servicios. Los iconos se
+// descargan del CDN bajo demanda y se guardan en disco para servirlos local en
+// las siguientes cargas. Así no hay que versionar archivos: basta con poner el
+// nombre del icono (slug de dashboardicons.com) en cada servicio.
+type IconsConfig struct {
+	CacheDir string `mapstructure:"cache_dir"` // dónde guardar los iconos cacheados
+	CDNURL   string `mapstructure:"cdn_url"`   // plantilla con %s para el slug del icono
 }
 
 // ServerConfig controla cómo escucha el servidor HTTP.
@@ -138,6 +148,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("theme.mode", "dark")
 	v.SetDefault("weather.units", "metric")
 	v.SetDefault("calendar.first_day_of_week", "monday")
+	v.SetDefault("icons.cache_dir", "cache/icons")
+	v.SetDefault("icons.cdn_url", "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/%s.svg")
 }
 
 // resolveEnvRefs reemplaza recursivamente las referencias ${VAR} en los campos

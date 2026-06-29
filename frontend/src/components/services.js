@@ -44,10 +44,11 @@ export function services() {
     },
     iconURL(icon) {
       // Sin icono definido -> icono por defecto.
-      if (!icon) return "/icons/default.svg";
-      // URL absoluta (p. ej. un CDN) -> tal cual; si no, archivo local en public/icons.
+      if (!icon) return "/api/icons/default";
+      // URL absoluta (p. ej. un CDN propio) -> tal cual.
       if (/^https?:\/\//.test(icon)) return icon;
-      return `/icons/${icon}`;
+      // Slug/nombre -> endpoint con caché en backend (descarga del CDN y guarda local).
+      return `/api/icons/${encodeURIComponent(icon.replace(/\.svg$/i, ""))}`;
     },
     serviceInitial(name) {
       return (name || "?").trim().charAt(0).toUpperCase();

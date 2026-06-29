@@ -79,10 +79,16 @@ arcane:
     host: "http://arcane-media.webapp.casa"
     api_key: "${ARCANE_MEDIA_API_KEY}"
 
+# Accesos directos del app grid.
+#   icon: nombre del icono en https://dashboardicons.com (slug, con o sin .svg).
+#         El backend lo descarga del CDN bajo demanda y lo cachea en disco
+#         (icons.cache_dir) para servirlo local en las siguientes cargas. Si el
+#         icono no existe en el CDN, se muestra uno por defecto. También admite
+#         una URL absoluta (https://…) para usar un icono propio.
 services:
   - name: "Gitea"
     url: "http://gitea.webapp.casa"
-    icon: "gitea.svg"
+    icon: "gitea"
     category: "Dev"
   - name: "Jellyfin"
     url: "http://jellyfin.webapp.casa"
@@ -94,5 +100,10 @@ services:
     category: "Infra"
   - name: "Arcane"
     url: "http://arcane.webapp.casa"
-    icon: "docker.svg"
+    icon: "arcane"
     category: "Infra"
+
+# Proxy con caché de iconos (opcional; estos son los valores por defecto).
+# icons:
+#   cache_dir: "cache/icons"   # móntalo como volumen en producción para persistir
+#   cdn_url: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/%s.svg"
