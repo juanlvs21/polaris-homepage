@@ -26,6 +26,7 @@ type Config struct {
 	Calendar CalendarConfig  `mapstructure:"calendar"`
 	Proxmox  []ProxmoxConfig `mapstructure:"proxmox"`
 	Arcane   []ArcaneConfig  `mapstructure:"arcane"`
+	Unifi    []UnifiConfig   `mapstructure:"unifi"`
 	Services []ServiceConfig `mapstructure:"services"`
 	Icons    IconsConfig     `mapstructure:"icons"`
 }
@@ -100,6 +101,15 @@ type ArcaneConfig struct {
 	APIKey string `mapstructure:"api_key"`
 }
 
+// UnifiConfig define una consola UniFi OS a monitorear vía la Integration API.
+type UnifiConfig struct {
+	Name      string `mapstructure:"name"`
+	Host      string `mapstructure:"host"`
+	APIKey    string `mapstructure:"api_key"`
+	SiteID    string `mapstructure:"site_id"`
+	VerifyTLS bool   `mapstructure:"verify_tls"`
+}
+
 // ServiceConfig define un acceso directo del app grid.
 type ServiceConfig struct {
 	Name     string `mapstructure:"name"`
@@ -161,6 +171,9 @@ func resolveEnvRefs(cfg *Config) {
 	for i := range cfg.Proxmox {
 		cfg.Proxmox[i].TokenSecret = expandEnv(cfg.Proxmox[i].TokenSecret)
 		cfg.Proxmox[i].TokenID = expandEnv(cfg.Proxmox[i].TokenID)
+	}
+	for i := range cfg.Unifi {
+		cfg.Unifi[i].APIKey = expandEnv(cfg.Unifi[i].APIKey)
 	}
 }
 

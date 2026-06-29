@@ -5,6 +5,7 @@ import (
 
 	"polaris-dashboard/internal/clients/arcane"
 	"polaris-dashboard/internal/clients/proxmox"
+	"polaris-dashboard/internal/clients/unifi"
 	"polaris-dashboard/internal/clients/weather"
 )
 
@@ -12,6 +13,10 @@ import (
 // Cuando conectemos las integraciones reales, este flag se puede retirar junto
 // con los helpers de este archivo.
 const useDummyData = true
+
+// showUnifiDummy fuerza datos de prueba en /api/unifi cuando no hay ninguna
+// consola UniFi configurada, para poder maquetar el panel.
+const showUnifiDummy = true
 
 const gib = 1024 * 1024 * 1024
 
@@ -128,4 +133,30 @@ func dummyLogs(id string, tail int) []string {
 		return out[len(out)-tail:]
 	}
 	return out
+}
+
+// dummyUnifiRouters devuelve un router UniFi simulado para maquetar el panel
+// sin una consola real conectada.
+func dummyUnifiRouters() []unifi.Router {
+	return []unifi.Router{
+		{
+			Name:            "Casa",
+			Online:          true,
+			Gateway:         "UDM-Pro",
+			Version:         "9.0.114",
+			Uptime:          21*86400 + 7*3600 + 12*60,
+			WanIP:           "190.202.10.42",
+			ISP:             "CANTV",
+			DownloadMbps:    312.4,
+			UploadMbps:      48.7,
+			LatencyMs:       9.3,
+			RxRateBps:       86 * 1024 * 1024,
+			TxRateBps:       12 * 1024 * 1024,
+			CPU:             0.18,
+			Mem:             0.42,
+			ClientsTotal:    37,
+			ClientsWired:    11,
+			ClientsWireless: 26,
+		},
+	}
 }

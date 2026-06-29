@@ -14,6 +14,7 @@ import (
 	"polaris-dashboard/internal/cache"
 	"polaris-dashboard/internal/clients/arcane"
 	"polaris-dashboard/internal/clients/proxmox"
+	"polaris-dashboard/internal/clients/unifi"
 	"polaris-dashboard/internal/clients/weather"
 	"polaris-dashboard/internal/config"
 )
@@ -25,10 +26,12 @@ type Handlers struct {
 	weather *weather.Client
 	proxmox []*proxmox.Client
 	arcane  []arcaneInstance
+	unifi   []*unifi.Client
 
 	weatherCache *cache.Entry[*weather.Weather]
 	proxmoxCache *cache.Entry[[]proxmox.Node]
 	dockerCache  *cache.Entry[[]dockerInstance]
+	unifiCache   *cache.Entry[[]unifi.Router]
 }
 
 type arcaneInstance struct {
@@ -44,6 +47,7 @@ func New(cfg *config.Config) *Handlers {
 		weatherCache: cache.New[*weather.Weather](15 * time.Minute),
 		proxmoxCache: cache.New[[]proxmox.Node](30 * time.Second),
 		dockerCache:  cache.New[[]dockerInstance](30 * time.Second),
+		unifiCache:   cache.New[[]unifi.Router](20 * time.Second),
 	}
 	for _, p := range cfg.Proxmox {
 		h.proxmox = append(h.proxmox, proxmox.New(p.Name, p.Host, p.TokenID, p.TokenSecret, p.VerifyTLS))
@@ -58,6 +62,16 @@ func New(cfg *config.Config) *Handlers {
 		}
 		h.arcane = append(h.arcane, arcaneInstance{name: name, client: arcane.New(a.Host, a.APIKey)})
 	}
+	for _, u := range cfg.Unifi {
+		if u.Host == "" {
+			continue
+		}
+		name := u.Name
+		if name == "" {
+			name = u.Host
+		}
+		h.unifi = append(h.unifi, unifi.New(name, u.Host, u.APIKey, u.SiteID, u.VerifyTLS))
+	}
 	return h
 }
 
@@ -69,6 +83,7 @@ func (h *Handlers) Register(app *fiber.App) {
 	api.Get("/config", h.Services)
 	api.Get("/weather", h.Weather)
 	api.Get("/proxmox", h.Proxmox)
+	api.Get("/unifi", h.Unifi)
 	api.Get("/docker", h.Docker)
 	api.Get("/docker/:id/logs", h.DockerLogs)
 	api.Get("/icons/:name", h.Icon)
