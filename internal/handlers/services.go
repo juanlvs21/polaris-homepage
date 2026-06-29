@@ -69,33 +69,9 @@ func pingStatus(client *http.Client, url string) string {
 	return "unknown"
 }
 
+// dummyServices toma los servicios del config y les asigna un estado simulado
+// (en modo demo no se hace ping real porque las URLs .casa no resuelven).
 func dummyServices(services []config.ServiceConfig) []serviceStatus {
-	demo := []config.ServiceConfig{
-		{Name: "Gitea", URL: "http://gitea.webapp.casa", Icon: "gitea.svg", Category: "Dev"},
-		{Name: "Jellyfin", URL: "http://jellyfin.webapp.casa", Icon: "jellyfin.svg", Category: "Media"},
-		{Name: "Proxmox", URL: "https://proxmox.webapp.casa:8006", Icon: "proxmox.svg", Category: "Infra"},
-		{Name: "Arcane", URL: "http://arcane.webapp.casa", Icon: "docker.svg", Category: "Infra"},
-		{Name: "Pi-hole", URL: "http://pihole.webapp.casa/admin", Icon: "pi-hole.svg", Category: "Network"},
-		{Name: "Grafana", URL: "http://grafana.webapp.casa", Icon: "grafana.svg", Category: "Observability"},
-		{Name: "Immich", URL: "http://immich.webapp.casa", Icon: "immich.svg", Category: "Media"},
-		{Name: "Uptime Kuma", URL: "http://uptime.webapp.casa", Icon: "uptime-kuma.svg", Category: "Observability"},
-	}
-	if len(services) < 6 {
-		seen := map[string]bool{}
-		for _, svc := range services {
-			seen[svc.Name] = true
-		}
-		for _, svc := range demo {
-			if !seen[svc.Name] {
-				services = append(services, svc)
-				seen[svc.Name] = true
-			}
-			if len(services) >= len(demo) {
-				break
-			}
-		}
-	}
-
 	out := make([]serviceStatus, 0, len(services))
 	for i, svc := range services {
 		status := "online"

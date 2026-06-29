@@ -43,7 +43,11 @@ export function services() {
       });
     },
     iconURL(icon) {
-      return icon ? `/static/icons/${icon}` : "";
+      // Sin icono definido -> icono por defecto.
+      if (!icon) return "/icons/default.svg";
+      // URL absoluta (p. ej. un CDN) -> tal cual; si no, archivo local en public/icons.
+      if (/^https?:\/\//.test(icon)) return icon;
+      return `/icons/${icon}`;
     },
     serviceInitial(name) {
       return (name || "?").trim().charAt(0).toUpperCase();
